@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mestre em E1 e E2 - Farmácia Unimontes</title>
+    <style>
+        :root {
+            /* Paleta Unimontes & Semântica */
+            --bg-color: #f8f9fa;
+            --text-color: #2c3e50;
+            --primary-blue: #1a3668;
+            --secondary-yellow: #f39c12;
+            --accent-blue: #3498db;
+            --card-bg: #ffffff;
+            --border-color: #e0e6ed;
+            
+            /* Cores Semânticas (Regras do Prompt) */
+            --azul-conceito: #e3f2fd;
+            --azul-texto: #1565c0;
+            --roxo-analogia: #f3e5f5;
+            --roxo-texto: #7b1fa2;
+            --amarelo-atencao: #fff3e0; /* Ajustado para leitura */
+            --amarelo-border: #f39c12;
+            --vermelho-erro: #ffebee;
+            --vermelho-texto: #c62828;
+            --verde-acerto: #e8f5e9;
+            --verde-texto: #2e7d32;
+
+            --radius: 12px;
+            --transition: all 0.3s ease;
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .dark {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --primary-blue: #0d1f3d;
+            --secondary-yellow: #d68910;
+            --card-bg: #1e1e1e;
+            --border-color: #333333;
+            
+            --azul-conceito: #0d2a45;
+            --azul-texto: #64b5f6;
+            --roxo-analogia: #301b3f;
+            --roxo-texto: #ba68c8;
+            --amarelo-atencao: #332200;
+            --amarelo-border: #f39c12;
+            --vermelho-erro: #3b1515;
+            --vermelho-texto: #ef5350;
+            --verde-acerto: #1b3320;
+            --verde-texto: #66bb6a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            transition: var(--transition);
+        }
+
+        /* Topbar */
+        #topbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        #progress-container {
+            width: 100%; height: 4px; background: rgba(255,255,255,0.2);
+            position: absolute; bottom: 0; left: 0;
+        }
+        #progress-bar {
+            height: 100%; background: var(--secondary-yellow); width: 0%;
+            transition: width 0.2s;
+        }
+
+        .topbar-controls button, .topbar-controls input {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 5px;
+            font-size: 0.9rem;
+        }
+        .topbar-controls input::placeholder { color: #ddd; }
+
+        /* Layout Main */
+        main {
+            max-width: 900px;
+            margin: 70px auto 40px auto;
+            padding: 20px;
+        }
+
+        h1, h2, h3 { color: var(--primary-blue); margin-bottom: 15px; }
+        .dark h1, .dark h2, .dark h3 { color: var(--secondary-yellow); }
+
+        /* Panels & Cards */
+        .panel {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Semantic Boxes */
+        .box { padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 5px solid; }
+        .box-conceito { background: var(--azul-conceito); border-color: var(--azul-texto); color: var(--text-color); }
+        .box-analogia { background: var(--roxo-analogia); border-color: var(--roxo-texto); color: var(--text-color); }
+        .box-atencao { background: var(--amarelo-atencao); border-color: var(--amarelo-border); color: var(--text-color); }
+        .box-erro { background: var(--vermelho-erro); border-color: var(--vermelho-texto); color: var(--text-color); }
+        
+        .box-conceito strong { color: var(--azul-texto); }
+        .box-analogia strong { color: var(--roxo-texto); }
+        .box-erro strong { color: var(--vermelho-texto); }
+
+        /* Tags */
+        .tag {
+            display: inline-block;
+            background: var(--secondary-yellow);
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        /* Accordions */
+        details {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        summary {
+            background: var(--primary-blue);
+            color: white;
+            padding: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+        }
+        summary::-webkit-details-marker { display: none; }
+        details[open] summary { background: var(--accent-blue); }
+        .module-content { padding: 20px; }
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 12px; border: 1px solid var(--border-color); text-align: left; }
+        th { background-color: var(--primary-blue); color: white; }
+
+        /* Flashcards */
+        .flashcard-container {
+            perspective: 1000px;
+            width: 100%; height: 250px;
+            margin: 20px 0;
+        }
+        .flashcard {
+            width: 100%; height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            cursor: pointer;
+            position: relative;
+        }
+        .flashcard.is-flipped { transform: rotateY(180deg); }
+        .card-face {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 20px; text-align: center;
+            border-radius: var(--radius);
+            background: var(--card-bg);
+            border: 2px solid var(--primary-blue);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .card-back { transform: rotateY(180deg); background: var(--azul-conceito); border-color: var(--azul-texto); }
+        .fc-controls { display: flex; justify-content: center; gap: 10px; margin-top: 15px; }
+        .btn-fc { padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-fc.know { background: var(--verde-texto); color: white; }
+        .btn-fc.dont-know { background: var(--vermelho-texto); color: white; }
+
+        /* Quiz */
+        .quiz-question { margin-bottom: 20px; display: none; }
+        .quiz-question.active { display: block; }
+        .quiz-options { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .quiz-option {
+            padding: 12px; background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 8px; cursor: pointer; transition: 0.2s;
+        }
+        .quiz-option:hover { background: var(--azul-conceito); }
+        .quiz-option.selected { border-color: var(--primary-blue); border-width: 2px; }
+        .quiz-option.correct { background: var(--verde-acerto); border-color: var(--verde-texto); }
+        .quiz-option.incorrect { background: var(--vermelho-erro); border-color: var(--vermelho-texto); }
+        .feedback { margin-top: 15px; padding: 10px; border-radius: 8px; display: none; }
+
+        /* Chemistry text */
+        .chem { font-family: "Courier New", Courier, monospace; letter-spacing: 1px; font-weight: bold; }
+        
+        /* Buttons */
+        .btn {
+            display: inline-block; padding: 10px 20px; background: var(--primary-blue);
+            color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem;
+        }
+        .btn:hover { background: var(--accent-blue); }
+
+        /* SVG Map */
+        .svg-container { width: 100%; overflow-x: auto; background: white; padding: 20px; border-radius: 8px; }
+
+        /* Notes & Checkboxes */
+        textarea { width: 100%; height: 100px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); margin-top: 10px; }
+        .checklist label { display: block; margin: 10px 0; cursor: pointer; }
+
+        /* Highlight for search */
+        .highlight { background-color: yellow; color: black; }
+
+        @media print {
+            #topbar, .fc-controls, .btn, details summary { display: none; }
+            details { border: none; }
+            .module-content { display: block !important; }
+            body { background: white; color: black; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOPBAR -->
+    <nav id="topbar">
+        <div><strong>📚 E1 e E2 - Unimontes</strong></div>
+        <div class="topbar-controls">
+            <input type="text" id="searchInput" placeholder="Buscar termo...">
+            <button onclick="toggleTheme()">🌗 Tema</button>
+            <button onclick="window.print()">🖨️ PDF</button>
+            <button onclick="resetProgress()">🔄 Reset</button>
+        </div>
+        <div id="progress-container"><div id="progress-bar"></div></div>
+    </nav>
+
+    <main id="content">
+        <!-- PAINEL DE ABERTURA -->
+        <section class="panel">
+            <h1>Reações de Eliminação (E1 e E2)</h1>
+            <p>Bem-vindo(a) ao seu ambiente de estudo focado para o World Café de Farmácia. Seu nível atual é "Zero"? Perfeito. Vamos construir o conhecimento degrau por degrau.</p>
+            
+            <h3>🎯 O que você vai dominar:</h3>
+            <ul>
+                <li>O mecanismo, a cinética e as condições das reações E1 e E2.</li>
+                <li>As Regras de Zaitsev vs. Hofmann.</li>
+                <li>O terror das provas: Estereoquímica do ciclo-hexano (anti-coplanar).</li>
+                <li>Aplicações práticas em síntese farmacêutica.</li>
+            </ul>
+            <p style="margin-top: 10px;"><strong>Tempo estimado:</strong> 2 horas | <strong>Pré-requisito:</strong> Saber o que é um carbono e um halogênio.</p>
+
+            <h3 style="margin-top:20px;">Mapa Mental de Conexões</h3>
+            <div class="svg-container">
+                <svg width="800" height="200" viewBox="0 0 800 200">
+                    <rect x="300" y="10" width="200" height="40" rx="10" fill="#1a3668" />
+                    <text x="400" y="35" fill="white" font-family="sans-serif" font-size="14" text-anchor="middle" font-weight="bold">Reação de Eliminação</text>
+                    
+                    <path d="M400 50 L200 100" stroke="#1a3668" stroke-width="3" fill="none" marker-end="url(#arrow)" />
+                    <path d="M400 50 L600 100" stroke="#1a3668" stroke-width="3" fill="none" marker-end="url(#arrow)" />
+
+                    <rect x="100" y="100" width="200" height="40" rx="10" fill="#f39c12" />
+                    <text x="200" y="125" fill="black" font-family="sans-serif" font-size="14" text-anchor="middle" font-weight="bold">Mecanismo E2 (Concertado)</text>
+                    
+                    <rect x="500" y="100" width="200" height="40" rx="10" fill="#e74c3c" />
+                    <text x="600" y="125" fill="white" font-family="sans-serif" font-size="14" text-anchor="middle" font-weight="bold">Mecanismo E1 (Etapas)</text>
+
+                    <text x="200" y="160" fill="gray" font-family="sans-serif" font-size="12" text-anchor="middle">Base Forte, Anti-coplanar</text>
+                    <text x="600" y="160" fill="gray" font-family="sans-serif" font-size="12" text-anchor="middle">Base Fraca, Forma Carbocátion</text>
+
+                    <defs>
+                        <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                            <path d="M 0 0 L 10 5 L 0 10 z" fill="#1a3668" />
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+        </section>
+
+        <!-- SE VOCÊ SÓ TEM 10 MINUTOS -->
+        <section class="panel">
+            <h2>⏱️ Se você só tem 10 minutos... (Resumo Executivo)</h2>
+            <div class="box box-conceito">
+                <p><strong>Eliminação</strong> é arrancar peças de uma molécula para criar uma <strong>ligação dupla</strong> (alqueno).</p>
+                <p><strong>E2 (Eliminação Bimolecular):</strong> Ocorre em UM SÓ PASSO. A base ataca o hidrogênio, a dupla se forma e o halogênio sai, TUDO AO MESMO TEMPO. Exige base forte. Condição inegociável: O H e o halogênio devem estar opostos um ao outro (<strong>anti-coplanar</strong>).</p>
+                <p><strong>E1 (Eliminação Unimolecular):</strong> Ocorre em DOIS PASSOS. Primeiro o halogênio sai sozinho, formando um <strong>carbocátion</strong> (intermediário positivo). Depois a base (geralmente fraca/solvente) rouba um H para formar a dupla. Risco grande: O carbocátion pode sofrer <strong>rearranjo</strong> para ficar mais estável antes da dupla se formar.</p>
+                <p><strong>Regra de Zaitsev:</strong> A dupla vai se formar no lugar que gerar o alqueno mais substituído (mais estável). Regra geral, a menos que usemos uma base gigante (Aí é <strong>Hofmann</strong>).</p>
+            </div>
+        </section>
+
+        <!-- MODULES -->
+        <section id="modules">
+            
+            <details>
+                <summary>Módulo 1: O Básico (Do Zero) <span class="status">⭕</span></summary>
+                <div class="module-content">
+                    <p>Antes de falarmos de E1 e E2, precisamos saber o vocabulário básico. Na química orgânica, o "palco" da reação tem nomes específicos.</p>
+                    
+                    <div class="box box-conceito">
+                        <p><strong>Substrato:</strong> A molécula principal que vai sofrer a reação (ex: um haleto de alquila).</p>
+                        <p><strong>Grupo de Saída (Leaving Group):</strong> O átomo que vai "ir embora". Geralmente é um halogênio (Cl, Br, I).</p>
+                        <p><strong>Carbono Alfa (&alpha;):</strong> O carbono que está segurando o Grupo de Saída.</p>
+                        <p><strong>Carbono Beta (&beta;):</strong> Os carbonos vizinhos diretos do carbono &alpha;.</p>
+                        <p><strong>Hidrogênio Beta:</strong> Os hidrogênios grudados no carbono &beta;.</p>
+                    </div>
+
+                    <div class="box box-analogia">
+                        <p><strong>💡 Analogia:</strong> Imagine que o Carbono &alpha; é um cara segurando uma bomba (o halogênio). O Carbono &beta; é o vizinho que está segurando o alicate (Hidrogênio &beta;). A Base é o esquadrão antibombas. A Base precisa pegar o alicate do vizinho para cortar o fio da bomba no mesmo instante. Se não houver Hidrogênio &beta;, não tem como ocorrer eliminação!</p>
+                    </div>
+
+                    <p>O que é <strong>Desidroalogenação</strong>? É tirar um Hidrogênio e um Halogênio. (Tipo E1/E2 com haletos).<br>
+                    O que é <strong>Desidratação</strong>? É tirar um Hidrogênio e uma Hidroxila (OH) de um álcool para formar água. (Exige meio ácido).</p>
+                    
+                    <button class="btn" onclick="markDone(this)">Marcar como Concluído</button>
+                </div>
+            </details>
+
+            <details>
+                <summary>Módulo 2: O Mecanismo E2 (Um Só Passo) <span class="status">⭕</span></summary>
+                <div class="module-content">
+                    <p>A reação <strong>E2</strong> significa Eliminação Bimolecular. "Bimolecular" porque a velocidade da reação depende do encontro de DUAS moléculas ao mesmo tempo: o Substrato e a Base.</p>
+                    <p class="chem">Velocidade = k * [Substrato] * [Base]</p>
+
+                    <div class="box box-conceito">
+                        <p><strong>O Mecanismo:</strong> É <strong>concertado</strong>. A base rouba o Hidrogênio &beta;, os elétrons desse hidrogênio "caem" formando a ligação dupla, e isso "expulsa" o Halogênio. Tudo ocorre em um único e milissegundo. Não há intermediários.</p>
+                        <p><strong>Condições ideais:</strong> Requer <strong>Bases Fortes</strong> (ex: NaOH, KOH, EtONa, t-BuOK) e substratos que preferencialmente sejam secundários (2º) ou terciários (3º), pois o alqueno formado será mais estável.</p>
+                    </div>
+
+                    <h3>Zaitsev vs Hofmann (Onde a dupla se forma?)</h3>
+                    <p>Se a molécula tiver carbonos &beta; diferentes (ex: um CH3 de um lado e um CH2 do outro), qual hidrogênio a base vai roubar?</p>
+                    
+                    <div class="box box-atencao">
+                        <p><strong>Regra de Zaitsev:</strong> Bases normais/pequenas (como OH-, EtO-, MeO-) vão roubar o hidrogênio que gera a <strong>dupla mais substituída (mais no meio da cadeia)</strong>, pois ela é termodinamicamente mais estável. É o "produto Zaitsev".</p>
+                        <p><strong>Regra de Hofmann:</strong> Bases gigantes/volumosas (como terc-butóxido, t-BuOK) são muito gordas. Elas não conseguem entrar no meio da molécula. Então, elas roubam o hidrogênio da ponta, gerando a <strong>dupla menos substituída</strong>. É o "produto Hofmann".</p>
+                    </div>
+
+                    <div class="micro-quiz" data-answer="2">
+                        <p><strong>Micro-quiz:</strong> Qual reagente favorece o produto de Hofmann?</p>
+                        <button onclick="checkMicroQuiz(this, 1)">1) NaOH</button>
+                        <button onclick="checkMicroQuiz(this, 2)">2) t-BuOK</button>
+                        <button onclick="checkMicroQuiz(this, 3)">3) EtONa</button>
+                        <span class="micro-feedback"></span>
+                    </div>
+
+                    <button class="btn" onclick="markDone(this)">Marcar como Concluído</button>
+                </div>
+            </details>
+
+            <details>
+                <summary>Módulo 3: Estereoquímica da E2 (Anti-Coplanar) <span class="status">⭕</span></summary>
+                <div class="module-content">
+                    <p>A E2 tem uma exigência geométrica rígida. Como tudo acontece ao mesmo tempo, os orbitais precisam estar perfeitamente alinhados para formar a ligação pi (&pi;).</p>
+
+                    <div class="box box-conceito">
+                        <p><strong>Disposição Anti-coplanar:</strong> O Hidrogênio &beta; que será roubado e o Grupo de Saída (Halogênio) DEVEM estar em lados opostos (180º um do outro) e no mesmo plano.</p>
+                    </div>
+
+                    <div class="box box-analogia">
+                        <p><strong>💡 Analogia:</strong> Imagine uma porta giratória. Para você entrar rápido (Base e H) enquanto alguém sai rápido (Halogênio) sem os dois baterem a cabeça, um precisa estar empurrando de um lado e o outro saindo do extremo oposto (180 graus).</p>
+                    </div>
+
+                    <h3>A Armadilha do Ciclo-hexano</h3>
+                    <div class="box box-erro">
+                        <p><strong>⚠️ Erro Comum:</strong> Ignorar a conformação cadeira do ciclo-hexano na prova.</p>
+                        <p>No ciclo-hexano, para que o H e o Halogênio fiquem "Anti-coplanares" (180º), <strong>AMBOS DEVEM ESTAR NA POSIÇÃO AXIAL</strong>. Se o halogênio estiver na posição equatorial, a reação E2 NÃO acontece até a cadeira sofrer inversão.</p>
+                        <p>Se o professor colocar um grupo <em>terc-butila</em> "travando" o anel para manter o halogênio equatorial, a reação E2 não ocorre ou é extremamente lenta!</p>
+                    </div>
+                    
+                    <button class="btn" onclick="markDone(this)">Marcar como Concluído</button>
+                </div>
+            </details>
+
+            <details>
+                <summary>Módulo 4: O Mecanismo E1 (O Drama do Carbocátion) <span class="status">⭕</span></summary>
+                <div class="module-content">
+                    <p>A <strong>E1</strong> é a Eliminação Unimolecular. A velocidade depende APENAS do Substrato.</p>
+                    <p class="chem">Velocidade = k * [Substrato]</p>
+
+                    <div class="box box-conceito">
+                        <p><strong>O Mecanismo (Em Etapas):</strong></p>
+                        <ol>
+                            <li><strong>Lenta:</strong> O Grupo de saída (halogênio) pega seus elétrons e vai embora sozinho. O carbono fica sem elétrons e vira um <strong>Carbocátion</strong> (C+).</li>
+                            <li><strong>Rápida:</strong> O solvente ou uma base fraca percebe o caos, chega perto de um carbono &beta; e rouba o hidrogênio. Os elétrons formam a dupla, estabilizando o C+.</li>
+                        </ol>
+                    </div>
+
+                    <h3>Estabilidade e Solvólise</h3>
+                    <p>Como a etapa lenta depende da formação do carbocátion, a reação E1 só funciona bem se o carbocátion for estável. <strong>Ordem de estabilidade: Terciário (3º) > Secundário (2º) >> Primário (1º não faz E1).</strong></p>
+                    <p>Frequentemente, a E1 ocorre em reações de <strong>Solvólise</strong>: onde o solvente atua como base (ex: H2O, metanol, etanol) sem adição de uma base forte.</p>
+
+                    <div class="box box-erro">
+                        <p><strong>⚠️ A Grande Armadilha da E1: Rearranjos!</strong></p>
+                        <p>Quando um carbocátion secundário se forma, ele "olha para os lados". Se houver um carbono vizinho que, caso trocassem de lugar, permitiria a ele ser Terciário (mais estável), ocorre um <strong>Rearranjo de Hidreto ou Metila (deslocamento 1,2)</strong>. Resultado: A dupla se forma em um lugar totalmente diferente de onde o halogênio estava!</p>
+                    </div>
+
+                    <button class="btn" onclick="markDone(this)">Marcar como Concluído</button>
+                </div>
+            </details>
+
+            <details>
+                <summary>Módulo 5: Aplicação Farmacêutica <span class="tag">[COMPLEMENTO]</span> <span class="status">⭕</span></summary>
+                <div class="module-content">
+                    <p>Por que estudamos isso em Farmácia? A introdução de uma ligação dupla em uma estrutura modifica completamente a forma tridimensional da molécula (passa de hibridização sp³ para sp² plana), alterando como a droga interage com os receptores no corpo.</p>
+                    
+                    <div class="box box-conceito">
+                        <p><strong>Exemplo: Síntese de Fármacos</strong></p>
+                        <p>Muitos fármacos esteroidais, anti-inflamatórios ou hormônios sintéticos necessitam da criação de uma dupla ligação específica no anel para ganhar bioatividade. Os químicos utilizam a <strong>eliminação E2</strong> com bases volumosas (como t-BuOK) para garantir que a dupla seja formada de forma estereospecífica (sem os rearranjos indesejados da E1 e controlando o produto de Hofmann/Zaitsev de acordo com a base escolhida).</p>
+                        <p><em>Na prática industrial, evita-se a via E1 devido às misturas de produtos e rearranjos de carbocátions, o que dificultaria a purificação do Insumo Farmacêutico Ativo (IFA).</em></p>
+                    </div>
+
+                    <button class="btn" onclick="markDone(this)">Marcar como Concluído</button>
+                </div>
+            </details>
+        </section>
+
+        <!-- QUADRO COMPARATIVO -->
+        <section class="panel">
+            <h2>📊 Quadro-Resumo Comparativo: E1 vs E2</h2>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Característica</th>
+                            <th>E1 (Unimolecular)</th>
+                            <th>E2 (Bimolecular)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Mecanismo</strong></td>
+                            <td>Duas etapas (via Carbocátion)</td>
+                            <td>Uma etapa (Concertado)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cinética</strong></td>
+                            <td>v = k[RX] (1ª ordem)</td>
+                            <td>v = k[RX][Base] (2ª ordem)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Substrato Favorecido</strong></td>
+                            <td>3º > 2º (1º não ocorre)</td>
+                            <td>3º > 2º > 1º</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Força da Base</strong></td>
+                            <td>Fraca (solvente, H2O, ROH)</td>
+                            <td>Forte (OH-, RO-, t-BuOK)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Estereoquímica</strong></td>
+                            <td>Mistura (não estereospecífica)</td>
+                            <td>Rigorosa: Requer H e X <strong>Anti-coplanares</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Rearranjos?</strong></td>
+                            <td>Sim, muito comuns!</td>
+                            <td>Não ocorrem.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 style="margin-top:20px;">🧠 Mnemônicos e Macetes</h3>
+            <div class="box box-analogia">
+                <p><strong>E2 = "Dois juntos de uma vez"</strong> (A Base e o Substrato agem no mesmo milissegundo, sem dar tempo para rearranjos).</p>
+                <p><strong>E1 = "Um de cada vez"</strong> (Primeiro sai o halogênio, forma a tristeza do carbocátion sozinho, depois a base tira o H).</p>
+            </div>
+        </section>
+
+        <!-- FLASHCARDS -->
+        <section class="panel">
+            <h2>🎴 Flashcards de Revisão Ativa</h2>
+            <p>Clique no cartão para virar. Responda se sabia ou não para acompanhar.</p>
+            
+            <div class="flashcard-container" id="fc-container">
+                <div class="flashcard" id="fc-card" onclick="flipCard()">
+                    <div class="card-face card-front">
+                        <h3 id="fc-front-text">Carregando...</h3>
+                        <p style="font-size:0.8rem; color:#666; margin-top:10px;">Clique para virar</p>
+                    </div>
+                    <div class="card-face card-back">
+                        <h3 id="fc-back-text">...</h3>
+                    </div>
+                </div>
+            </div>
+            <p style="text-align:center;">Cartão <span id="fc-current">1</span> de <span id="fc-total">15</span></p>
+            <div class="fc-controls">
+                <button class="btn-fc dont-know" onclick="nextCard(false)">❌ Errei</button>
+                <button class="btn-fc know" onclick="nextCard(true)">✅ Acertei</button>
+            </div>
+        </section>
+
+        <!-- BANCO DE QUESTOES -->
+        <section class="panel" id="quiz-section">
+            <h2>📝 Banco de Questões & Simulado</h2>
+            <p>Teste seus conhecimentos. No modo simulado, você terá um cronômetro!</p>
+            <button class="btn" onclick="startQuiz(false)">Modo Estudo (Feedback imediato)</button>
+            <button class="btn" style="background:var(--secondary-yellow); color:black;" onclick="startQuiz(true)">Modo Simulado (Cronometrado)</button>
+            <p id="timer-display" style="font-weight:bold; color:var(--vermelho-texto); display:none; margin-top:10px;">Tempo: 05:00</p>
+            
+            <div id="quiz-container" style="margin-top:20px;">
+                <!-- Perguntas Injetadas via JS -->
+            </div>
+        </section>
+
+        <!-- PLANO DE REVISÃO E NOTAS -->
+        <section class="panel">
+            <h2>📅 Plano de Revisão Espaçada</h2>
+            <p>Marque os dias após o seu estudo inicial para revisar este material.</p>
+            <div class="checklist">
+                <label><input type="checkbox" id="rev-d1" onchange="saveChecklist()"> Dia +1: Revisar Resumo e Flashcards.</label>
+                <label><input type="checkbox" id="rev-d3" onchange="saveChecklist()"> Dia +3: Refazer o Banco de Questões (Modo Simulado).</label>
+                <label><input type="checkbox" id="rev-d7" onchange="saveChecklist()"> Dia +7: Explicar Zaitsev e Hofmann para alguém em voz alta.</label>
+                <label><input type="checkbox" id="rev-d15" onchange="saveChecklist()"> Dia +15: Checagem de Estereoquímica Anti-coplanar.</label>
+            </div>
+
+            <h3 style="margin-top:20px;">Autoavaliação (Checklist do Domínio)</h3>
+            <div class="checklist">
+                <label><input type="checkbox" id="chk-1" onchange="saveChecklist()"> Sei explicar a diferença de cinética entre E1 e E2.</label>
+                <label><input type="checkbox" id="chk-2" onchange="saveChecklist()"> Sei identificar o produto de Zaitsev e de Hofmann.</label>
+                <label><input type="checkbox" id="chk-3" onchange="saveChecklist()"> Consigo desenhar por que a reação E2 no ciclo-hexano requer posições diaxiais.</label>
+                <label><input type="checkbox" id="chk-4" onchange="saveChecklist()"> Lembro que E1 forma carbocátion e pode sofrer rearranjo.</label>
+            </div>
+
+            <h3 style="margin-top:20px;">Bloco de Anotações Pessoais</h3>
+            <textarea id="personal-notes" placeholder="Digite suas anotações aqui... (salvamento automático)" oninput="saveNotes()"></textarea>
+        </section>
+        
+        <!-- GLOSSÁRIO -->
+        <section class="panel">
+            <h2>📖 Glossário</h2>
+            <p><strong>Anti-coplanar:</strong> Conformação onde o H e o Grupo de Saída estão no mesmo plano, mas apontando para direções opostas (180º).</p>
+            <p><strong>Carbocátion:</strong> Intermediário com carbono deficiente de elétrons, carga positiva. Estabilidade: 3º > 2º > 1º.</p>
+            <p><strong>Desidroalogenação:</strong> Reação que remove um hidrogênio e um halogênio para formar uma dupla.</p>
+            <p><strong>Regra de Zaitsev:</strong> Forma o alqueno mais substituído (mais estável) em uma eliminação.</p>
+            <p><strong>Regra de Hofmann:</strong> Forma o alqueno menos substituído, típico com bases volumosas.</p>
+        </section>
+        
+        <footer style="text-align:center; padding:20px; font-size:0.9rem; color:#666;">
+            <p>Gerado para o World Café de Farmácia - Unimontes. Baseado no Solomons, Química Orgânica Vol 1, Cap 7.</p>
+            <p>Versão 1.0 - Totalmente Offline Capaz</p>
+        </footer>
+    </main>
+
+    <script>
+        // === CONTROLE DE TEMA E PROGRESSO ===
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+            localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+        }
+
+        window.onload = function() {
+            if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+            loadProgress();
+            loadFlashcard();
+            loadNotes();
+        }
+
+        function markDone(btn) {
+            btn.innerHTML = "✅ Concluído";
+            btn.style.backgroundColor = "var(--verde-texto)";
+            btn.parentElement.previousElementSibling.querySelector('.status').innerHTML = "✅";
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const total = document.querySelectorAll('details').length;
+            const done = document.querySelectorAll('.status').length;
+            let count = 0;
+            document.querySelectorAll('.status').forEach(el => { if(el.innerHTML === "✅") count++; });
+            document.getElementById('progress-bar').style.width = ((count/total)*100) + "%";
+            localStorage.setItem('unimontes_e1e2_prog', count);
+        }
+
+        function resetProgress() {
+            if(confirm("Zerar todo o progresso, anotações e checklists?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('unimontes_e1e2_prog');
+            // Basic layout restore could go here for modules
+        }
+
+        // === MICRO-QUIZ INLINE ===
+        function checkMicroQuiz(btn, selected) {
+            const container = btn.parentElement;
+            const correct = container.getAttribute('data-answer');
+            const feedback = container.querySelector('.micro-feedback');
+            
+            container.querySelectorAll('button').forEach(b => b.style.display = 'none');
+            
+            if(selected == correct) {
+                feedback.innerHTML = "✅ <strong>Exato!</strong> Bases volumosas como o t-BuOK não conseguem atacar no meio da cadeia por impedimento estérico, atacando a ponta e formando o produto Hofmann.";
+                feedback.style.color = "var(--verde-texto)";
+            } else {
+                feedback.innerHTML = "❌ <strong>Incorreto.</strong> Bases normais como NaOH ou EtONa formam Zaitsev (mais estável). Para Hofmann, precisamos de uma base 'gorda' como t-BuOK.";
+                feedback.style.color = "var(--vermelho-texto)";
+            }
+            feedback.style.display = "block";
+        }
+
+        // === SEARCH ===
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('details').forEach(det => {
+                const text = det.innerText.toLowerCase();
+                if(term && text.includes(term)) det.setAttribute('open', '');
+            });
+        });
+
+        // === FLASHCARDS ===
+        const flashcards = [
+            {q: "O que é um substrato em E1/E2?", a: "A molécula que sofre a eliminação, possuindo o Carbono Alfa e o Grupo de Saída."},
+            {q: "Na reação E2, quantas etapas existem?", a: "Apenas 1 etapa (Mecanismo Concertado). Tudo ocorre simultaneamente."},
+            {q: "Na E2, qual a dependência da velocidade?", a: "Depende de ambos: Substrato e Base. V = k[RX][Base]"},
+            {q: "Qual a estereoquímica obrigatória da E2?", a: "Arranjo Anti-Coplanar. O Hidrogênio e o Grupo de Saída devem estar a 180º um do outro."},
+            {q: "O que a Regra de Zaitsev prevê?", a: "Formação do alqueno mais substituído (mais estável) como produto principal."},
+            {q: "Que tipo de base favorece a formação do produto de Hofmann?", a: "Bases volumosas (com grande impedimento estérico), como o terc-butóxido de potássio (t-BuOK)."},
+            {q: "Por que ciclo-hexanos são uma 'armadilha' na E2?", a: "Porque o H e o Grupo de Saída só ficam anti-coplanares se AMBOS estiverem na posição AXIAL."},
+            {q: "Quantas etapas tem a reação E1?", a: "Duas etapas principais. 1) Saída do Halogênio e formação do Carbocátion (Lenta). 2) Base retira o próton (Rápida)."},
+            {q: "Qual a ordem de estabilidade dos carbocátions na E1?", a: "Terciário (3º) > Secundário (2º) > Primário (1º). Primários não fazem E1."},
+            {q: "A velocidade da E1 depende da base?", a: "Não. A etapa lenta é a formação do carbocátion, então a velocidade só depende do Substrato. V = k[RX]."},
+            {q: "Qual a grande armadilha da reação E1?", a: "A ocorrência de Rearranjos de carbocátion (migração de hidreto ou metila) para formar um cátion mais estável antes da dupla se formar."},
+            {q: "E2 prefere base forte ou fraca?", a: "Base Forte (ex: OH-, EtO-), pois a base participa ativamente da etapa lenta arrancando o próton."},
+            {q: "E1 ocorre bem em qual tipo de solvente?", a: "Solventes polares próticos (H2O, Etanol), que estabilizam o carbocátion através de solvatação (Solvólise)."},
+            {q: "Qual tipo de reação ocorre se aquecermos um álcool com H2SO4?", a: "Desidratação de álcool (Uma eliminação catalisada por ácido). 3º e 2º via E1, 1º via E2."},
+            {q: "Em síntese farmacêutica, por que se prefere E2 ao invés de E1?", a: "Porque a E2 é estereospecífica e previsível (sem carbocátions, logo, sem misturas complexas por rearranjos)."}
+        ];
+        
+        let fcIndex = 0;
+        function loadFlashcard() {
+            document.getElementById('fc-front-text').innerText = flashcards[fcIndex].q;
+            document.getElementById('fc-back-text').innerText = flashcards[fcIndex].a;
+            document.getElementById('fc-current').innerText = fcIndex + 1;
+            document.getElementById('fc-total').innerText = flashcards.length;
+            document.getElementById('fc-card').classList.remove('is-flipped');
+        }
+        function flipCard() {
+            document.getElementById('fc-card').classList.toggle('is-flipped');
+        }
+        function nextCard(knew) {
+            fcIndex = (fcIndex + 1) % flashcards.length;
+            loadFlashcard();
+        }
+
+        // === QUIZ / SIMULADO ===
+        const questions = [
+            {
+                q: "1. Um pesquisador precisa sintetizar o 2-metil-1-buteno (alqueno menos substituído) a partir do 2-bromo-2-metilbutano. Qual a melhor escolha de reagente e por quê?",
+                opts: [
+                    "a) Etóxido de sódio (EtONa), porque é uma base pequena e gera o produto Zaitsev.",
+                    "b) Ácido sulfúrico e calor, pois desidrata o haleto via E1.",
+                    "c) terc-butóxido de potássio (t-BuOK), porque o impedimento estérico da base favorece o produto Hofmann (menos substituído).",
+                    "d) Água em ebulição, promovendo uma reação E2 seletiva."
+                ],
+                correct: 2,
+                feedback: {
+                    0: "Errado. EtONa geraria Zaitsev (2-metil-2-buteno), que é o alqueno mais substituído.",
+                    1: "Errado. Haletos de alquila não sofrem desidratação ácida, álcoois sim. Além disso E1 daria Zaitsev.",
+                    2: "Correto! Bases volumosas não conseguem acessar o hidrogênio mais interno (mais impedido), então atacam o da ponta, gerando o produto Hofmann (menos substituído).",
+                    3: "Errado. Água é base fraca e favoreceria E1 (com mistura de produtos Zaitsev/rearranjos)."
+                }
+            },
+            {
+                q: "2. Sobre a estereoquímica da reação E2 em anéis de ciclo-hexano, é correto afirmar:",
+                opts: [
+                    "a) O hidrogênio e o halogênio podem estar em qualquer posição, desde que no mesmo carbono.",
+                    "b) O halogênio deve obrigatoriamente estar na posição equatorial para sofrer ataque.",
+                    "c) Para que a reação ocorra, o hidrogênio β e o grupo de saída devem estar em posições trans-diaxiais (anti-coplanares).",
+                    "d) A conformação bote é a única que permite a E2."
+                ],
+                correct: 2,
+                feedback: {
+                    0: "Errado. Eles devem estar em carbonos vizinhos (alfa e beta).",
+                    1: "Errado. Se o halogênio for equatorial, as ligações vizinhas não estarão anti-coplanares a ele.",
+                    2: "Correto! O requisito geométrico da E2 exige que o H e o Grupo de Saída estejam paralelos e em lados opostos (180º). Em um anel de cadeira, isso só é possível se AMBOS forem axiais.",
+                    3: "Errado. A conformação cadeira em posições diaxiais é que permite o arranjo correto."
+                }
+            },
+            {
+                q: "3. Uma reação E1 exibe cinética de primeira ordem. Isso ocorre porque:",
+                opts: [
+                    "a) A base e o substrato reagem simultaneamente na etapa lenta.",
+                    "b) A etapa determinante da velocidade envolve apenas a quebra da ligação C-Halogênio para formar o carbocátion.",
+                    "c) O solvente inibe a ação do halogênio.",
+                    "d) Ocorre a formação imediata da ligação pi em um único passo."
+                ],
+                correct: 1,
+                feedback: {
+                    0: "Errado. Essa é a descrição da cinética de segunda ordem da E2.",
+                    1: "Correto! Na E1 a primeira etapa (saída do grupo de saída) é muito lenta e determina a velocidade. Apenas o substrato participa dessa etapa. V = k[RX].",
+                    2: "Errado. O solvente polar na verdade ajuda a estabilizar os íons formados.",
+                    3: "Errado. E1 ocorre em passos múltiplos."
+                }
+            },
+            {
+                q: "4. Qual dos carbocátions intermediários abaixo reagirá mais rapidamente e terá maior probabilidade de NÃO sofrer rearranjo em uma reação E1?",
+                opts: [
+                    "a) Carbocátion primário",
+                    "b) Carbocátion secundário ligado a cadeia longa",
+                    "c) Carbocátion terciário",
+                    "d) Cátion metílico"
+                ],
+                correct: 2,
+                feedback: {
+                    0: "Errado. Cátions primários são muito instáveis e sequer se formam na E1.",
+                    1: "Errado. O cátion secundário se forma, mas tem altíssima chance de sofrer rearranjo (migração de H ou Metila) se houver um carbono terciário vizinho.",
+                    2: "Correto! O carbocátion terciário é altamente estabilizado por hiperconjugação e efeito indutivo. Sendo o mais estável, é o que se forma mais rápido e não precisa sofrer rearranjo para ganhar estabilidade.",
+                    3: "Errado. Nem faz reação."
+                }
+            },
+            {
+                q: "5. A desidratação de álcoois secundários e terciários com H2SO4 ocorre por qual mecanismo preferencialmente?",
+                opts: [
+                    "a) E2, porque a água é uma excelente base.",
+                    "b) E1, iniciando com a protonação da hidroxila, seguida da saída de H2O formando um carbocátion.",
+                    "c) SN2, formando éter de coroa.",
+                    "d) E1cb, através de um carbânion."
+                ],
+                correct: 1,
+                feedback: {
+                    0: "Errado. Desidratação ácida de álcoois 2º e 3º vai via E1. A água é base fraca.",
+                    1: "Correto! O OH- é um péssimo grupo de saída. O ácido o protona, transformando-o em H2O+ (ótimo grupo de saída). Ele sai e forma o carbocátion (Mecanismo E1).",
+                    2: "Errado. Éteres requerem outras condições.",
+                    3: "Errado. Condição ácida não forma carbânion."
+                }
+            }
+        ];
+
+        let isSimulation = false;
+        let timer;
+        let timeRemaining = 300; // 5 mins
+
+        function startQuiz(sim) {
+            isSimulation = sim;
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+            
+            if(sim) {
+                document.getElementById('timer-display').style.display = 'block';
+                timeRemaining = 300;
+                clearInterval(timer);
+                timer = setInterval(updateTimer, 1000);
+            } else {
+                document.getElementById('timer-display').style.display = 'none';
+                clearInterval(timer);
+            }
+
+            questions.forEach((q, idx) => {
+                let html = `<div class="quiz-question active" id="q${idx}">
+                    <h3>${q.q}</h3>
+                    <div class="quiz-options">`;
+                q.opts.forEach((opt, oIdx) => {
+                    html += `<div class="quiz-option" onclick="selectOption(${idx}, ${oIdx}, this)">${opt}</div>`;
+                });
+                html += `</div>
+                    <div class="feedback" id="fb${idx}"></div>
+                </div>`;
+                container.innerHTML += html;
+            });
+        }
+
+        function selectOption(qIdx, oIdx, el) {
+            if(isSimulation) {
+                // In simulation, just highlight selected, no feedback until end
+                const options = el.parentElement.querySelectorAll('.quiz-option');
+                options.forEach(o => o.classList.remove('selected'));
+                el.classList.add('selected');
+                el.setAttribute('data-selected', oIdx);
+                
+                // Add complete button if last question answered
+                checkSimCompletion();
+            } else {
+                // Study mode: immediate feedback
+                const q = questions[qIdx];
+                const fb = document.getElementById(`fb${qIdx}`);
+                const options = el.parentElement.querySelectorAll('.quiz-option');
+                options.forEach(o => o.style.pointerEvents = 'none'); // disable clicks
+                
+                if(oIdx === q.correct) {
+                    el.classList.add('correct');
+                } else {
+                    el.classList.add('incorrect');
+                    options[q.correct].classList.add('correct');
+                }
+                fb.innerHTML = q.feedback[oIdx];
+                fb.style.display = 'block';
+                fb.style.backgroundColor = oIdx === q.correct ? 'var(--verde-acerto)' : 'var(--vermelho-erro)';
+            }
+        }
+
+        function checkSimCompletion() {
+            const answered = document.querySelectorAll('.quiz-option.selected').length;
+            if(answered === questions.length && !document.getElementById('finish-sim-btn')) {
+                const btn = document.createElement('button');
+                btn.id = 'finish-sim-btn';
+                btn.className = 'btn';
+                btn.innerText = 'Finalizar Simulado';
+                btn.onclick = finishSimulation;
+                document.getElementById('quiz-container').appendChild(btn);
+            }
+        }
+
+        function finishSimulation() {
+            clearInterval(timer);
+            let score = 0;
+            questions.forEach((q, idx) => {
+                const container = document.getElementById(`q${idx}`);
+                const selectedEl = container.querySelector('.quiz-option.selected');
+                const fb = document.getElementById(`fb${idx}`);
+                const options = container.querySelectorAll('.quiz-option');
+                
+                let selectedIdx = selectedEl ? parseInt(selectedEl.getAttribute('data-selected')) : -1;
+                
+                if(selectedIdx === q.correct) {
+                    score++;
+                    if(selectedEl) selectedEl.classList.add('correct');
+                } else {
+                    if(selectedEl) selectedEl.classList.add('incorrect');
+                    options[q.correct].classList.add('correct');
+                }
+                
+                fb.innerHTML = selectedIdx !== -1 ? q.feedback[selectedIdx] : "Não respondida. A correta era a indicada em verde.";
+                fb.style.display = 'block';
+                fb.style.backgroundColor = selectedIdx === q.correct ? 'var(--verde-acerto)' : 'var(--vermelho-erro)';
+            });
+            document.getElementById('timer-display').innerText = `Simulado Finalizado! Nota: ${score}/${questions.length}`;
+        }
+
+        function updateTimer() {
+            if(timeRemaining <= 0) {
+                finishSimulation();
+                return;
+            }
+            timeRemaining--;
+            let m = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+            let s = (timeRemaining % 60).toString().padStart(2, '0');
+            document.getElementById('timer-display').innerText = `Tempo Restante: ${m}:${s}`;
+        }
+
+        // === LOCAL STORAGE FOR NOTES AND CHECKLISTS ===
+        function saveNotes() {
+            localStorage.setItem('unimontes_e1e2_notes', document.getElementById('personal-notes').value);
+        }
+        function loadNotes() {
+            if(localStorage.getItem('unimontes_e1e2_notes')) {
+                document.getElementById('personal-notes').value = localStorage.getItem('unimontes_e1e2_notes');
+            }
+            ['rev-d1', 'rev-d3', 'rev-d7', 'rev-d15', 'chk-1', 'chk-2', 'chk-3', 'chk-4'].forEach(id => {
+                if(localStorage.getItem('unimontes_e1e2_' + id) === 'true') {
+                    document.getElementById(id).checked = true;
+                }
+            });
+        }
+        function saveChecklist() {
+            ['rev-d1', 'rev-d3', 'rev-d7', 'rev-d15', 'chk-1', 'chk-2', 'chk-3', 'chk-4'].forEach(id => {
+                localStorage.setItem('unimontes_e1e2_' + id, document.getElementById(id).checked);
+            });
+        }
+
+    </script>
+</body>
+</html>
+```eof
